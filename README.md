@@ -1,24 +1,22 @@
-########
-supermgr
-########
+# supermgr
 
-**Maintainer:** k dot shenk at gmail dot com
+#### Maintainer
+k dot shenk at gmail dot com
 
+***
 **supermgr** is merely an alternate means of managing supervisord processes. `supervisorctl` felt a bit clunky for me
 while working with process groups and individual processes for a certain project. This tool connects directly to
 supervisor via its [XML-RPC](http://supervisord.readthedocs.io/en/latest/api.html) interface.
 
-************
-Installation
-************
-Via PIP:
+***
+## Installation
+
+### Via PIP:
 ```
 pip install supermgr
 ```
 
-*****
-Usage
-*****
+## Usage
 | Command       | Description                                                                |
 | ------------- |----------------------------------------------------------------------------|
 | list-actions  | List available actions                                                     |
@@ -32,13 +30,9 @@ Usage
 | reload        | Reload the state of each group and process from a saved state              |
 | monitor-running | Check for any processes not running                                      |
 
-************
-Contributing
-************
+## Contributing
 Suggestions and contributions are welcome. Please fork me and create PRs back to the `develop` branch.
 
-**********
-Disclaimer
-**********
+### Disclaimer
 I'm new to creating python packages. This seemed like a good place to start learning, being a relatively small
 project to bite off.
