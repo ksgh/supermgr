@@ -5,7 +5,7 @@ supermgr
 
 **supermgr** is merely an alternate means of managing supervisord processes. `supervisorctl` felt a bit clunky for me
 while working with process groups and individual processes for a certain project. This tool connects directly to
-supervisor via its [XML-RPC](http://supervisord.readthedocs.io/en/latest/api.html) interface.
+supervisor via its XML-RPC (<http://supervisord.readthedocs.io/en/latest/api.html>) interface.
 
 Installation
 ------------
