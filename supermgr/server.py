@@ -5,9 +5,9 @@ import xmlrpclib
 import sys
 
 class Server(object):
-    def __init__(self, host, port):
-        self.host   = host
-        self.port   = port
+    def __init__(self, connect_opts):
+        self.host   = connect_opts.get('host')
+        self.port   = connect_opts.get('port')
         self.server = None
         self.__connect()
 
@@ -28,5 +28,4 @@ class Server(object):
                 raise serr
             else:
                 print('Unable to connect to {url}, check your connection settings.'.format(url=url), file=sys.stderr)
-
 

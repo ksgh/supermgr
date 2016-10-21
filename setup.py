@@ -3,8 +3,8 @@ from setuptools import setup
 setup(
     name='supermgr',
     version='0.1',
-    description='Help manage supervisorctl',
-    url='http://github.com/storborg/funniest',
+    description='Easier Management of individual supervisord processes',
+    url='https://github.com/ksgh/supermgr',
     author='Kyle Shenk',
     author_email='k.shenk@gmail.com',
     license='MIT',

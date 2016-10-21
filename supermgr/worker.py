@@ -6,12 +6,12 @@ import xmlrpclib
 import sys
 
 class Worker(Server):
-    def __init__(self, host='localhost', port=9500):
-        super(Worker, self).__init__(host, port)
+    def __init__(self, connect_opts):
+        super(Worker, self).__init__(connect_opts)
         self.workers = None
 
         if not isinstance(self.server, xmlrpclib.Server):
-            sys.exit(1)
+            sys.exit(2)
 
     def get_workers(self, group_name=None):
         data    = self.server.supervisor.getAllProcessInfo()
@@ -30,4 +30,7 @@ class Worker(Server):
             self.workers = OrderedDict(sorted(workers.items(), key=lambda k: k[0]))
 
         return self.workers
+
+    def get_server(self):
+        return self.server
 
