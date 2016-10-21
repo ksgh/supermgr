@@ -11,9 +11,7 @@ Installation
 ------------
 
 **Via PIP:**
-`
-pip install supermgr
-`
+``pip install supermgr``
 
 Usage
 -----
@@ -30,7 +28,7 @@ Usage
 
 Contributing
 ------------
-Suggestions and contributions are welcome. Please fork me and create PRs back to the `develop` branch.
+Suggestions and contributions are welcome. Please fork me and create PRs back to the ``develop`` branch.
 
 Disclaimer
 ----------
