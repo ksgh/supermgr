@@ -18,7 +18,7 @@ pip install supermgr
 
 ## Usage
 | Command       | Description                                                                |
-| ------------- |----------------------------------------------------------------------------|
+| --------------|----------------------------------------------------------------------------|
 | list-actions  | List available actions                                                     |
 | list          | Print a list of all known process groups and the status of each process    |
 | full-list     | Same as 'list', but also print all the information we have on each process |
