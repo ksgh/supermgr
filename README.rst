@@ -11,22 +11,22 @@ Installation
 ------------
 
 **Via PIP:**
-```
+``
 pip install supermgr
-```
+``
 
 Usage
 -----
 * **list-actions**: List available actions
 * **list**: Print a list of all known process groups and the status of each process
-``*`` **full-list**: Same as 'list', but also print all the information we have on each process
-``*`` **status**: Same as 'list'
-``*`` **full-status**: Same as 'full-list'
-``*`` **start**: Start a process by number, the next process not started, or all of them
-``*`` **stop**: Stop a process by number, the next process not stopped, or all of them
-``*`` **save**: Save the current state of each process group and number
-``*`` **reload**: Reload the state of each group and process from a saved state
-``*`` **monitor-running**: Check for any processes not running
+* **full-list**: Same as 'list', but also print all the information we have on each process
+* **status**: Same as 'list'
+* **full-status**: Same as 'full-list'
+* **start**: Start a process by number, the next process not started, or all of them
+* **stop**: Stop a process by number, the next process not stopped, or all of them
+* **save**: Save the current state of each process group and number
+* **reload**: Reload the state of each group and process from a saved state
+* **monitor-running**: Check for any processes not running
 
 Contributing
 ------------
