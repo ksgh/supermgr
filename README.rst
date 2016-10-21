@@ -11,9 +11,9 @@ Installation
 ------------
 
 **Via PIP:**
-``
+`
 pip install supermgr
-``
+`
 
 Usage
 -----
