@@ -38,7 +38,7 @@ def color(val, color):
 
 def worker_list(workers, prgm=None, full=False):
 
-    if not workers[prgm]:
+    if prgm and not workers[prgm]:
         print('{e}: no workers found'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
         return False
 
