@@ -37,6 +37,11 @@ def color(val, color):
     return '{0}{1}{2}'.format(color, val, Style.RESET_ALL)
 
 def worker_list(workers, prgm=None, full=False):
+
+    if not workers[prgm]:
+        print('{e}: no workers found'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
+        return False
+
     for name, status in workers.items():
         print(color(name, Fore.CYAN + Style.BRIGHT))
         for p, s in status.items():
@@ -52,6 +57,8 @@ def worker_list(workers, prgm=None, full=False):
                 for k, v in s.items():
                     if k not in ('group', 'name'):
                         print('\t\t{0}: {1}'.format(k, v))
+
+    return True
 
 def monitor_workers(workers, target_state=_STATE_RUNNING[0]):
     errors = []
@@ -245,18 +252,26 @@ def main():
         if not monitor_workers(w.get_workers()):
             sys.exit(_STAT_WARN)
         print('Check complete!')
-        return True
+        sys.exit(_STAT_OK)
 
     if action in ('list', 'status', 'full-list', 'full-status'):
         full_list = False
         if action.startswith('full-'):
             full_list = True
         w = supermgr.Worker(connection)
-        worker_list(w.get_workers(pgm_name), pgm_name, full_list)
+        if not worker_list(w.get_workers(pgm_name), pgm_name, full_list):
+            sys.exit(_STAT_WARN)
         sys.exit(_STAT_OK)
 
     if action in ('start', 'stop'):
+        if not pgm_name:
+            print('A program/group name is required')
+            sys.exit(_STAT_WARN)
+
         p_nums = num.split(',')
 
-        handle_action(action, pgm_name, p_nums)
+        if not handle_action(action, pgm_name, p_nums):
+            sys.exit(_STAT_CRIT)
+
+        sys.exit(_STAT_OK)
 
