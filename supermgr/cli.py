@@ -214,11 +214,7 @@ def main():
         sys.exit(_STAT_UNKNOWN)
 
     if action == 'list-actions' or not VALID_ACTIONS.get(action):
-        if action.startswith('-h') or action.startswith('--h') or action.endswith('help'):
-            #usage()
-            sys.exit(_STAT_OK)
-
-        if action != 'list-actions':
+        if action != 'list-actions' and action not in ('-h', '--help', 'help'):
             print('{e}: {a} is not a valid action'.format(e=color('ERROR', Fore.RED), a=action), file=sys.stderr)
         print('Available actions are:')
         _fmt = '     {act:<30}{desc:60}'
