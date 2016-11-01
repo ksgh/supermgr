@@ -1,5 +1,5 @@
-from .server import Server
 import threading
+import xmlrpclib
 
 class Action(threading.Thread):
     def __init__(self, server, action, name, num, thread_lock):
@@ -31,11 +31,19 @@ class Action(threading.Thread):
             # Not used yet.
             self.ret_status = self.server.supervisor.startProcessGroup('{name}'.format(name=self.name))
         else:
-            self.ret_status = self.server.supervisor.startProcess('{name}:{num}'.format(name=self.name, num=self.num))
+            try:
+                self.ret_status = self.server.supervisor.startProcess('{name}:{num}'.format(name=self.name, num=self.num))
+            except xmlrpclib.Fault as e:
+                #print(e.faultString)
+                pass
 
     def stop_process(self):
         if self.num == '*':
             # Not used yet.
             self.ret_status = self.server.supervisor.stopProcessGroup('{name}'.format(name=self.name))
         else:
-            self.ret_status = self.server.supervisor.stopProcess('{name}:{num}'.format(name=self.name, num=self.num))
+            try:
+                self.ret_status = self.server.supervisor.stopProcess('{name}:{num}'.format(name=self.name, num=self.num))
+            except xmlrpclib.Fault as e:
+                #print(e.faultString)
+                pass

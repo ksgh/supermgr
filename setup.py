@@ -6,7 +6,7 @@ def readme():
 
 setup(
     name='supermgr',
-    version='0.3',
+    version='0.4',
     description='Easier Management of individual supervisord processes',
     long_description=readme(),
     url='https://github.com/ksgh/supermgr',
