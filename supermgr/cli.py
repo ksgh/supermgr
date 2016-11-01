@@ -7,6 +7,7 @@ import pprint
 import sys
 import json
 import os
+import argparse
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -36,16 +37,25 @@ _STATE_FATAL        = ('FATAL',)
 def color(val, color):
     return '{0}{1}{2}'.format(color, val, Style.RESET_ALL)
 
-def worker_list(workers, prgm=None, full=False):
+def worker_list(workers, prgm=None, full=False, list_running=False):
 
     if prgm and not workers[prgm]:
         print('{e}: no workers found'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
         return False
 
     for name, status in workers.items():
-        print(color(name, Fore.CYAN + Style.BRIGHT))
+        _show = False
+        if list_running:
+            for p, s in status.items():
+                if s.get('statename').upper() in _STATE_RUNNING:
+                    _show = True
+        if not list_running or _show == True:
+            print(color(name, Fore.CYAN + Style.BRIGHT))
         for p, s in status.items():
             sn = s.get('statename').upper()
+            if list_running:
+                if sn not in _STATE_RUNNING:
+                    continue
             if sn in _STATE_RUNNING:
                 state = color(s['statename'], Fore.GREEN)
             elif sn in _STATE_FATAL:
@@ -202,6 +212,21 @@ def handle_action(action, prgm, nums):
     return not found_error
 
 def main():
+    __prgm_desc = '''
+            Trying to account for Jenkins not being able to do "precisely" what we want to do with
+            watching specific branches and merging this and that.
+            '''
+    parser = argparse.ArgumentParser(description=__prgm_desc,
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument('--running', dest='running', action='store_true',
+                        help='Used with list, full-list, status, full-status')
+
+    parser.add_argument('--list', dest='list', action='store_true',
+                        help='things?')
+
+    args = parser.parse_args()
+
     connection  = supermgr.get_config()
     num         = ''
     pgm_name    = None
@@ -213,19 +238,19 @@ def main():
         #usage()
         sys.exit(_STAT_UNKNOWN)
 
-    if action == 'list-actions' or not VALID_ACTIONS.get(action):
-        if action != 'list-actions' and action not in ('-h', '--help', 'help'):
-            print('{e}: {a} is not a valid action'.format(e=color('ERROR', Fore.RED), a=action), file=sys.stderr)
-        print('Available actions are:')
-        _fmt = '     {act:<30}{desc:60}'
-        for key, desc in VALID_ACTIONS.items():
-            print(_fmt.format(act=color(key, Fore.YELLOW), desc=desc))
-        sys.exit(_STAT_UNKNOWN)
+    #if action == 'list-actions' or not VALID_ACTIONS.get(action):
+    #    if action != 'list-actions' and action not in ('-h', '--help', 'help'):
+    #        print('{e}: {a} is not a valid action'.format(e=color('ERROR', Fore.RED), a=action), file=sys.stderr)
+    #    print('Available actions are:')
+    #    _fmt = '     {act:<30}{desc:60}'
+    #    for key, desc in VALID_ACTIONS.items():
+    #        print(_fmt.format(act=color(key, Fore.YELLOW), desc=desc))
+    #    sys.exit(_STAT_UNKNOWN)
 
-    try:
-        pgm_name = sys.argv[2]
-    except IndexError:
-        pass
+    #try:
+    #    pgm_name = sys.argv[2]
+    #except IndexError:
+    #    pass
 
     try:
         num = sys.argv[3]
@@ -250,12 +275,12 @@ def main():
         print('Check complete!')
         sys.exit(_STAT_OK)
 
-    if action in ('list', 'status', 'full-list', 'full-status'):
+    if action in ('list', 'status', 'full-list', 'full-status') or args.list:
         full_list = False
         if action.startswith('full-'):
             full_list = True
         w = supermgr.Worker(connection)
-        if not worker_list(w.get_workers(pgm_name), pgm_name, full_list):
+        if not worker_list(w.get_workers(pgm_name), pgm_name, full_list, args.running):
             sys.exit(_STAT_WARN)
         sys.exit(_STAT_OK)
 
