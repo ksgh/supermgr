@@ -1,5 +1,6 @@
 from __future__ import print_function
 from colorama import init, Fore, Style
+from datetime import datetime
 import supermgr
 import threading
 import pprint
@@ -53,6 +54,8 @@ def worker_list(workers, prgm=None, full=False, list_running=False):
             if full is True:
                 for k, v in s.items():
                     if k not in ('group', 'name'):
+                        if k in ('start', 'stop', 'now'):
+                            v = datetime.fromtimestamp(int(v)).strftime('%Y-%m-%d %H:%M:%S')
                         print('\t\t{0}: {1}'.format(k, v))
 
     if prgm_not_found:
