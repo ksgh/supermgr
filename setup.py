@@ -16,6 +16,7 @@ setup(
     packages=['supermgr'],
     install_requires=[
         'colorama',
+        'argparse'
     ],
     zip_safe=False,
 

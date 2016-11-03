@@ -1,6 +1,5 @@
 from __future__ import print_function
 from colorama import init, Fore, Style
-from collections import OrderedDict
 import supermgr
 import threading
 import pprint
@@ -10,19 +9,6 @@ import os
 import argparse
 
 pp = pprint.PrettyPrinter(indent=4)
-
-VALID_ACTIONS       = OrderedDict()
-
-VALID_ACTIONS['list-actions']     = 'List available actions'
-VALID_ACTIONS['list']             = 'Print a list of all known process groups and the status of each process'
-VALID_ACTIONS['full-list']        = 'Same as \'list\', but also print all the information we have on each process'
-VALID_ACTIONS['status']           = 'Same as \'list\''
-VALID_ACTIONS['full-status']      = 'Same as \'full-list\''
-VALID_ACTIONS['start']            = 'Start a process by number, the next process not started, or all of them'
-VALID_ACTIONS['stop']             = 'Stop a process by number, the next process not stopped, or all of them'
-VALID_ACTIONS['save']             = 'Save the current state of each process group and number'
-VALID_ACTIONS['reload']           = 'Reload the state of each group and process from a saved status'
-VALID_ACTIONS['monitor-running']  = 'Check for any processes not running'
 
 SAVE_FILE           = '/tmp/__supermgr_status.json'
 _STAT_OK            = 0
@@ -50,7 +36,7 @@ def worker_list(workers, prgm=None, full=False, list_running=False):
             for p, s in status.items():
                 if s.get('statename').upper() in _STATE_RUNNING:
                     _show = True
-        if not list_running or _show == True:
+        if not list_running or _show is True:
             print(color(name, Fore.CYAN + Style.BRIGHT))
         for p, s in status.items():
             sn = s.get('statename').upper()
@@ -64,7 +50,7 @@ def worker_list(workers, prgm=None, full=False, list_running=False):
             else:
                 state = color(s['statename'], Fore.RED)
             print('\t{0}: {1}'.format(p, state))
-            if full == True:
+            if full is True:
                 for k, v in s.items():
                     if k not in ('group', 'name'):
                         print('\t\t{0}: {1}'.format(k, v))
@@ -162,7 +148,7 @@ def handle_action(action, prgm, nums):
         workers = w.get_workers()
     else:
         workers = w.get_workers(prgm)
-        if workers[prgm] == None:
+        if workers[prgm] is None:
             print('{e}: no workers found'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
             return False
 
@@ -293,7 +279,7 @@ def main():
         print('Check complete!')
         sys.exit(_STAT_OK)
 
-    if args.list != None:
+    if args.list is not None:
         w = supermgr.Worker(connection)
         if not worker_list(w.get_workers(args.list), args.list, args.full, args.running):
             sys.exit(_STAT_WARN)
