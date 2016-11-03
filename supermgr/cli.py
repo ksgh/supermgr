@@ -38,10 +38,11 @@ def color(val, color):
     return '{0}{1}{2}'.format(color, val, Style.RESET_ALL)
 
 def worker_list(workers, prgm=None, full=False, list_running=False):
-
-    if prgm and not workers[prgm]:
-        print('{e}: no workers found'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
-        return False
+    prgm_not_found = []
+    if prgm:
+        for p in prgm:
+            if p not in workers:
+                prgm_not_found.append('{e}: no workers found for {p}'.format(e=color('ERROR', Fore.RED + Style.BRIGHT), p=p))
 
     for name, status in workers.items():
         _show = False
@@ -68,6 +69,11 @@ def worker_list(workers, prgm=None, full=False, list_running=False):
                     if k not in ('group', 'name'):
                         print('\t\t{0}: {1}'.format(k, v))
 
+    if prgm_not_found:
+        for nf in prgm_not_found:
+            print(nf)
+        return False
+
     return True
 
 def monitor_workers(workers, target_state=_STATE_RUNNING[0]):
@@ -88,31 +94,31 @@ def monitor_workers(workers, target_state=_STATE_RUNNING[0]):
 
     return True
 
-def save_state(workers):
+def save_state(workers, filename):
     try:
-        with open(SAVE_FILE, 'w') as f:
+        with open(filename, 'w') as f:
             f.write(json.dumps(workers))
-        print(color('Saved current worker status to: {f}'.format(f=SAVE_FILE), Fore.CYAN + Style.BRIGHT))
+        print(color('Saved current worker status to: {f}'.format(f=filename), Fore.CYAN + Style.BRIGHT))
         return True
     except IOError as e:
         print(os.strerror(e.errno), file=sys.stderr)
-        print('Tried to open {f} for writing'.format(f=SAVE_FILE), file=sys.stderr)
+        print('Tried to open {f} for writing'.format(f=filename), file=sys.stderr)
         return False
 
-def reload_state():
+def reload_state(filename):
     print(color('Attempting to return workers to a previously saved state', Fore.YELLOW + Style.BRIGHT))
     try:
-        with open(SAVE_FILE, 'r') as f:
+        with open(filename, 'r') as f:
             try:
                 workers = json.loads(f.read())
             except ValueError as e:
                 print(color(e, Fore.RED + Style.BRIGHT), file=sys.stderr)
                 print('{e}: Perhaps \'save\' did not work? Check the contents of {f}'.format(
-                    e=color('ERROR', Fore.RED + Style.BRIGHT), f=SAVE_FILE), file=sys.stderr)
+                    e=color('ERROR', Fore.RED + Style.BRIGHT), f=filename), file=sys.stderr)
                 return False
     except IOError as e:
         print(color(os.strerror(e.errno), Fore.RED + Style.BRIGHT), file=sys.stderr)
-        print('{e}: Tried to open {f} for reading'.format(e=color('ERROR', Fore.RED + Style.BRIGHT), f=SAVE_FILE),
+        print('{e}: Tried to open {f} for reading'.format(e=color('ERROR', Fore.RED + Style.BRIGHT), f=filename),
               file=sys.stderr)
         return False
 
@@ -212,87 +218,105 @@ def handle_action(action, prgm, nums):
     return not found_error
 
 def main():
-    __prgm_desc = '''
-            Trying to account for Jenkins not being able to do "precisely" what we want to do with
-            watching specific branches and merging this and that.
-            '''
+    def usage():
+        ex = (
+            (color('Start the first "prgmName" not found to be running', Fore.WHITE + Style.BRIGHT),
+                'supermgr --start prgmName'),
+            (color('Start process number 3 and 5 of "prgmName"', Fore.WHITE + Style.BRIGHT),
+                'supermgr --start prgmName 3 5'),
+            (color('Start all "prgmName" processes', Fore.WHITE + Style.BRIGHT),
+                'supermgr --start prgmName all'),
+            (color('List all processes', Fore.WHITE + Style.BRIGHT),
+                'supermgr --list'),
+            (color('List only running processes', Fore.WHITE + Style.BRIGHT),
+                'supermgr --list --running'),
+            (color('List full status for the running processes for "prgmName"', Fore.WHITE + Style.BRIGHT),
+                'supermgr --list prgmName --full --running')
+        )
+        usage = '\n' + '\n'.join(['    %s\n    %s\n' % (e[0], e[1]) for e in ex])
+        return usage
+
+    __prgm_desc = color('Management interface for supervisorctl', Fore.CYAN + Style.BRIGHT)
     parser = argparse.ArgumentParser(description=__prgm_desc,
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                                     usage=usage())
 
-    parser.add_argument('--running', dest='running', action='store_true',
-                        help='Used with list, full-list, status, full-status')
+    main_grp        = parser.add_argument_group(color('Actions', Fore.YELLOW + Style.BRIGHT))
+    list_grp        = parser.add_argument_group(color('List Modifiers', Fore.YELLOW + Style.BRIGHT))
 
-    parser.add_argument('--list', dest='list', action='store_true',
-                        help='things?')
+    start_stop_grp  = main_grp.add_mutually_exclusive_group()
+    save_reload_grp = main_grp.add_mutually_exclusive_group()
 
-    args = parser.parse_args()
+    start_stop_grp.add_argument('-s', '--start', dest='start', nargs='+',
+                        help='Start a process by number, the next process not started, or all of them')
+    start_stop_grp.add_argument('-S', '--stop', dest='stop', nargs='+',
+                        help='Stop a process by number, the next process not stopped, or all of them')
 
+    save_reload_grp.add_argument('--save', dest='save', type=str, const=SAVE_FILE, nargs='?',
+                        help='Save the current state of each process group and number')
+    save_reload_grp.add_argument('--reload', dest='reload', type=str, const=SAVE_FILE, nargs='?',
+                        help='Reload the state of each group and process from a saved status')
+
+    main_grp.add_argument('-l', '--list', dest='list', nargs='*',
+                        help='List all groups and processes. Optionally show a specific group')
+    list_grp.add_argument('-r', '--running', dest='running', action='store_true',
+                        help='Only show running processes')
+    list_grp.add_argument('-f', '--full', dest='full', action='store_true',
+                        help='Show full status of processes')
+
+    main_grp.add_argument('--monitor-running', dest='monitor_running', action='store_true',
+                        help='Check for any processes not running')
+
+    args        = parser.parse_args()
     connection  = supermgr.get_config()
-    num         = ''
-    pgm_name    = None
 
-    try:
-        action = sys.argv[1]
-    except IndexError:
-        print('{e}: an action is required'.format(e=color('ERROR', Fore.RED)), file=sys.stderr)
-        #usage()
-        sys.exit(_STAT_UNKNOWN)
+    # It should (or I think it should) be possible to use a subparser for this, but I couldn't
+    # quite get it to behave correctly.
+    if (args.full or args.running) and args.list == None:
+        print('{e}: --full, and --running only apply to -l, --list'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
+        sys.exit(0)
 
-    #if action == 'list-actions' or not VALID_ACTIONS.get(action):
-    #    if action != 'list-actions' and action not in ('-h', '--help', 'help'):
-    #        print('{e}: {a} is not a valid action'.format(e=color('ERROR', Fore.RED), a=action), file=sys.stderr)
-    #    print('Available actions are:')
-    #    _fmt = '     {act:<30}{desc:60}'
-    #    for key, desc in VALID_ACTIONS.items():
-    #        print(_fmt.format(act=color(key, Fore.YELLOW), desc=desc))
-    #    sys.exit(_STAT_UNKNOWN)
-
-    #try:
-    #    pgm_name = sys.argv[2]
-    #except IndexError:
-    #    pass
-
-    try:
-        num = sys.argv[3]
-    except IndexError:
-        pass
-
-    if action == 'save':
+    if args.save:
         w = supermgr.Worker(connection)
-        if not save_state(w.get_workers()):
+        if not save_state(w.get_workers(), args.save):
             sys.exit(_STAT_WARN)
         sys.exit(_STAT_OK)
 
-    if action == 'reload':
-        if not reload_state():
+    if args.reload:
+        if not reload_state(args.reload):
             sys.exit(_STAT_WARN)
         sys.exit(_STAT_OK)
 
-    if action == 'monitor-running':
+    if args.monitor_running:
         w = supermgr.Worker(connection)
         if not monitor_workers(w.get_workers()):
             sys.exit(_STAT_WARN)
         print('Check complete!')
         sys.exit(_STAT_OK)
 
-    if action in ('list', 'status', 'full-list', 'full-status') or args.list:
-        full_list = False
-        if action.startswith('full-'):
-            full_list = True
+    if args.list != None:
         w = supermgr.Worker(connection)
-        if not worker_list(w.get_workers(pgm_name), pgm_name, full_list, args.running):
+        if not worker_list(w.get_workers(args.list), args.list, args.full, args.running):
             sys.exit(_STAT_WARN)
         sys.exit(_STAT_OK)
 
-    if action in ('start', 'stop'):
-        if not pgm_name:
-            print('A program/group name is required')
-            sys.exit(_STAT_WARN)
+    if args.start or args.stop:
+        if args.start:
+            items = args.start
+            _action = 'start'
+        else:
+            items = args.stop
+            _action = 'stop'
 
-        p_nums = num.split(',')
+        pgm_name = items.pop(0)
 
-        if not handle_action(action, pgm_name, p_nums):
+        if not items:
+            items.append('')
+
+        if not handle_action(_action, pgm_name, items):
             sys.exit(_STAT_CRIT)
 
         sys.exit(_STAT_OK)
+
+    parser.print_help()
 
