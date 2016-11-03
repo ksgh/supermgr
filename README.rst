@@ -15,7 +15,7 @@ Installation
 
 Usage
 -----
-.. code-block:: none
+.. code-block::
         Start the first "prgmName" not found to be running
         supermgr --start prgmName
 
