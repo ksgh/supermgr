@@ -59,8 +59,7 @@ def worker_list(workers, prgm=None, full=False, list_running=False):
                         print('\t\t{0}: {1}'.format(k, v))
 
     if prgm_not_found:
-        for nf in prgm_not_found:
-            print(nf)
+        print('\n'.join(nf for nf in prgm_not_found))
         return False
 
     return True
@@ -77,8 +76,7 @@ def monitor_workers(workers, target_state=_STATE_RUNNING[0]):
             errors.append('{pgm} does not have any processes in the {tgt} state!'.format(pgm=name, tgt=target_state))
 
     if len(errors) > 0:
-        for e in errors:
-            print(e)
+        print('\n'.join(e for e in errors))
         return False
 
     return True
