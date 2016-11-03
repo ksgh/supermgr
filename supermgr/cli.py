@@ -233,8 +233,7 @@ def main():
             (color('List full status for the running processes for "prgmName"', Fore.WHITE + Style.BRIGHT),
                 'supermgr --list prgmName --full --running')
         )
-        usage = '\n' + '\n'.join(['    %s\n    %s\n' % (e[0], e[1]) for e in ex])
-        return usage
+        return '\n' + '\n'.join(['    %s\n    %s\n' % (e[0], e[1]) for e in ex])
 
     __prgm_desc = color('Management interface for supervisorctl', Fore.CYAN + Style.BRIGHT)
     parser = argparse.ArgumentParser(description=__prgm_desc,
@@ -272,7 +271,7 @@ def main():
 
     # It should (or I think it should) be possible to use a subparser for this, but I couldn't
     # quite get it to behave correctly.
-    if (args.full or args.running) and args.list == None:
+    if (args.full or args.running) and args.list is None:
         print('{e}: --full, and --running only apply to -l, --list'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
         sys.exit(0)
 

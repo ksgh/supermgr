@@ -15,17 +15,50 @@ Installation
 
 Usage
 -----
-* **help, -h, --help**: List available actions
-* **list-actions**: List available actions
-* **list [process]**: Print a list of all known process groups and the status of each process
-* **full-list [process]**: Same as 'list', but also print all the information we have on each process
-* **status [process]**: Same as 'list'
-* **full-status [process]**: Same as 'full-list'
-* **start <process> [all, nothing, or numbers of processes separated by commas]**: Start a process by number, the next process not started, or all of them
-* **stop <process> [all, nothing, or numbers of processes separated by commas]**: Stop a process by number, the next process not stopped, or all of them
-* **save**: Save the current state of each process group and number
-* **reload**: Reload the state of each group and process from a saved state
-* **monitor-running**: Check for any processes not running
+``
+    Start the first "prgmName" not found to be running
+    supermgr --start prgmName
+
+    Start process number 3 and 5 of "prgmName"
+    supermgr --start prgmName 3 5
+
+    Start all "prgmName" processes
+    supermgr --start prgmName all
+
+    List all processes
+    supermgr --list
+
+    List only running processes
+    supermgr --list --running
+
+    List full status for the running processes for "prgmName"
+    supermgr --list prgmName --full --running
+
+Management interface for supervisorctl
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+Actions:
+  -s START [START ...], --start START [START ...]
+                        Start a process by number, the next process not
+                        started, or all of them (default: None)
+  -S STOP [STOP ...], --stop STOP [STOP ...]
+                        Stop a process by number, the next process not
+                        stopped, or all of them (default: None)
+  --save [SAVE]         Save the current state of each process group and
+                        number (default: None)
+  --reload [RELOAD]     Reload the state of each group and process from a
+                        saved status (default: None)
+  -l [LIST [LIST ...]], --list [LIST [LIST ...]]
+                        List all groups and processes. Optionally show a
+                        specific group (default: None)
+  --monitor-running     Check for any processes not running (default: False)
+
+List Modifiers:
+  -r, --running         Only show running processes (default: False)
+  -f, --full            Show full status of processes (default: False)
+``
 
 When starting or stopping processes, if nothing is provided as a process number the next process number in the group's
 sequence not found in the desired state will be acted upon.
