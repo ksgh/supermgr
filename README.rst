@@ -15,7 +15,7 @@ Installation
 
 Usage
 -----
-.. highlight:: none
+.. code-block:: none
         Start the first "prgmName" not found to be running
         supermgr --start prgmName
 
@@ -27,7 +27,7 @@ Usage
 
         List all processes
         supermgr --list
-    
+
         List only running processes
         supermgr --list --running
 
