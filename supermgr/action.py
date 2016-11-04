@@ -29,21 +29,21 @@ class Action(threading.Thread):
     def start_process(self):
         if self.num == '*':
             # Not used yet.
+            # @TODO: handle dict return
             self.ret_status = self.server.supervisor.startProcessGroup('{name}'.format(name=self.name))
         else:
             try:
                 self.ret_status = self.server.supervisor.startProcess('{name}:{num}'.format(name=self.name, num=self.num))
             except xmlrpclib.Fault as e:
-                #print(e.faultString)
-                pass
+                self.ret_status = False
 
     def stop_process(self):
         if self.num == '*':
             # Not used yet.
+            # @TODO: handle dict return
             self.ret_status = self.server.supervisor.stopProcessGroup('{name}'.format(name=self.name))
         else:
             try:
                 self.ret_status = self.server.supervisor.stopProcess('{name}:{num}'.format(name=self.name, num=self.num))
             except xmlrpclib.Fault as e:
-                #print(e.faultString)
-                pass
+                self.ret_status = False

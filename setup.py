@@ -6,7 +6,7 @@ def readme():
 
 setup(
     name='supermgr',
-    version='0.4',
+    version='0.5',
     description='Easier Management of individual supervisord processes',
     long_description=readme(),
     url='https://github.com/ksgh/supermgr',
@@ -16,6 +16,8 @@ setup(
     packages=['supermgr'],
     install_requires=[
         'colorama',
+        'argparse',
+        'tailer'
     ],
     zip_safe=False,
 
