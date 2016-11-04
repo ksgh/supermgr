@@ -33,6 +33,3 @@ class Worker(Server):
 
         return self.workers
 
-    def get_server(self):
-        return self.server
-

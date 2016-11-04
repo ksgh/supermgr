@@ -8,6 +8,7 @@ import sys
 import json
 import os
 import argparse
+import tailer
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -29,7 +30,9 @@ def worker_list(workers, prgm=None, full=False, list_running=False):
     if prgm:
         for p in prgm:
             if p not in workers:
-                prgm_not_found.append('{e}: no workers found for {p}'.format(e=color('ERROR', Fore.RED + Style.BRIGHT), p=p))
+                prgm_not_found.append('{e}: no workers found for {p}'.format(
+                    e=color('ERROR', Fore.RED + Style.BRIGHT),
+                    p=color(p, Fore.CYAN + Style.BRIGHT)))
 
     for name, status in workers.items():
         _show = False
@@ -63,6 +66,22 @@ def worker_list(workers, prgm=None, full=False, list_running=False):
         return False
 
     return True
+
+def tail_log(worker, prgm, filetype=None):
+    logkey = 'stdout_logfile' if (filetype is None or filetype == 'out') else 'stderr_logfile'
+
+    try:
+        index = worker.get(prgm).keys()[0]
+        logfile = worker.get(prgm)[index].get(logkey)
+    except IndexError:
+        print('{e}: Unable to find a suitable log file'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
+        return False
+    try:
+        for line in tailer.follow(open(logfile)):
+            print(line)
+    except KeyboardInterrupt:
+        print()
+        return True
 
 def monitor_workers(workers, target_state=_STATE_RUNNING[0]):
     errors = []
@@ -188,19 +207,17 @@ def handle_action(action, prgm, nums):
     if a_threads:
         for a in a_threads:
             a.join()
+            # @TODO: see Action - handle dict return status
             if not a.ret_status:
-                print('{name}:{num} {action} - {stat}'.format(
-                    name=color(a.name, Fore.CYAN + Style.BRIGHT),
-                    num=a.num,
-                    action=a.action,
-                    stat=color('FAILED', Fore.RED + Style.BRIGHT)))
+                stat = color('FAILED', Fore.RED + Style.BRIGHT)
                 found_error = True
             else:
-                print('{name}:{num} {action} - {stat}'.format(
-                    name=color(a.name, Fore.CYAN + Style.BRIGHT),
-                    num=a.num,
-                    action=a.action,
-                    stat=color('OK', Fore.GREEN)))
+                stat = color('OK', Fore.GREEN)
+            print('{name}:{num} {action} - {stat}'.format(
+                name=color(a.name, Fore.CYAN + Style.BRIGHT),
+                num=a.num,
+                action=a.action,
+                stat=stat))
 
     return not found_error
 
@@ -218,7 +235,11 @@ def main():
             (color('List only running processes', Fore.WHITE + Style.BRIGHT),
                 'supermgr --list --running'),
             (color('List full status for the running processes for "prgmName"', Fore.WHITE + Style.BRIGHT),
-                'supermgr --list prgmName --full --running')
+                'supermgr --list prgmName --full --running'),
+            (color('Tail the stdout logfile for "prgmName"', Fore.WHITE + Style.BRIGHT),
+                'supermgr --tail prgmName'),
+            (color('Tail the stderr logfile for "prgmName"', Fore.WHITE + Style.BRIGHT),
+             'supermgr --tail prgmName err')
         )
         return '\n' + '\n'.join(['    %s\n    %s\n' % (e[0], e[1]) for e in ex])
 
@@ -245,13 +266,15 @@ def main():
 
     main_grp.add_argument('-l', '--list', dest='list', nargs='*',
                         help='List all groups and processes. Optionally show a specific group')
+    main_grp.add_argument('--monitor-running', dest='monitor_running', action='store_true',
+                          help='Check for any processes not running')
+    main_grp.add_argument('-t', '--tail', dest='tail', nargs='+',
+                          help='Tail a process\'s logfile. If the type (err, out) is not provided this will default to stdout')
+
     list_grp.add_argument('-r', '--running', dest='running', action='store_true',
                         help='Only show running processes')
     list_grp.add_argument('-f', '--full', dest='full', action='store_true',
                         help='Show full status of processes')
-
-    main_grp.add_argument('--monitor-running', dest='monitor_running', action='store_true',
-                        help='Check for any processes not running')
 
     args        = parser.parse_args()
     connection  = supermgr.get_config()
@@ -261,6 +284,19 @@ def main():
     if (args.full or args.running) and args.list is None:
         print('{e}: --full, and --running only apply to -l, --list'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
         sys.exit(0)
+
+    if args.tail:
+        w       = supermgr.Worker(connection)
+        prgm    = args.tail.pop(0)
+        worker  = w.get_workers(prgm)
+        try:
+            filetype = args.tail[0]
+        except IndexError:
+            filetype = 'out'
+        if tail_log(worker, prgm, filetype):
+            sys.exit(_STAT_OK)
+
+        sys.exit(_STAT_WARN)
 
     if args.save:
         w = supermgr.Worker(connection)

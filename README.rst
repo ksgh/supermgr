@@ -36,6 +36,12 @@ Usage
         List full status for the running processes for "prgmName"
         supermgr --list prgmName --full --running
 
+        Tail the stdout logfile for "prgmName"
+        supermgr --tail prgmName
+
+        Tail the stderr logfile for "prgmName"
+        supermgr --tail prgmName err
+
         Management interface for supervisorctl
 
         optional arguments:
@@ -56,6 +62,11 @@ Usage
                                 List all groups and processes. Optionally show a
                                 specific group (default: None)
           --monitor-running     Check for any processes not running (default: False)
+
+          -t TAIL [TAIL ...], --tail TAIL [TAIL ...]
+                                Tail a process's logfile. If the type (err, out) is
+                                not provided this will default to stdout (default:
+                                None)
 
         List Modifiers:
           -r, --running         Only show running processes (default: False)
