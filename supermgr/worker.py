@@ -17,7 +17,7 @@ class Worker(Server):
         data    = self.server.supervisor.getAllProcessInfo()
         workers = defaultdict(dict)
 
-        if not isinstance(group_names, list):
+        if group_names is not None and not isinstance(group_names, list):
             group_names = [group_names]
 
         for info in data:
