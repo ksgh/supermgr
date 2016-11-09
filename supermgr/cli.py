@@ -1,6 +1,7 @@
 from __future__ import print_function
 from colorama import init, Fore, Style
 from datetime import datetime
+from time import sleep
 import supermgr
 import threading
 import pprint
@@ -18,12 +19,29 @@ _STAT_WARN          = 1
 _STAT_CRIT          = 2
 _STAT_UNKNOWN       = 3
 
+_STATE_TRANS        = ('STARTING', 'STOPPING', 'BACKOFF')
 _STATE_RUNNING      = ('RUNNING',)
 _STATE_STOPPED      = ('STOPPED', 'EXITED', 'FATAL')
 _STATE_FATAL        = ('FATAL',)
+_STATE_UNKNOWN      = ('UNKNOWN')
 
 def color(val, color):
     return '{0}{1}{2}'.format(color, val, Style.RESET_ALL)
+
+def format_state(state_name):
+    # http://supervisord.org/subprocess.html#process-states
+    if state_name in _STATE_RUNNING:
+        state = color(state_name, Fore.GREEN)
+    elif state_name in _STATE_FATAL:
+        state = color(state_name, Fore.RED + Style.BRIGHT)
+    elif state_name in _STATE_TRANS:
+        state = color(state_name, Fore.YELLOW)
+    elif state_name in _STATE_UNKNOWN:
+        state = color(state_name, Fore.WHITE + Style.BRIGHT)
+    else:
+        state = color(state_name, Fore.RED)
+
+    return state
 
 def worker_list(workers, prgm=None, full=False, list_running=False):
     prgm_not_found = []
@@ -43,16 +61,10 @@ def worker_list(workers, prgm=None, full=False, list_running=False):
         if not list_running or _show is True:
             print(color(name, Fore.CYAN + Style.BRIGHT))
         for p, s in status.items():
-            sn = s.get('statename').upper()
             if list_running:
-                if sn not in _STATE_RUNNING:
+                if s.get('statename').upper() not in _STATE_RUNNING:
                     continue
-            if sn in _STATE_RUNNING:
-                state = color(s['statename'], Fore.GREEN)
-            elif sn in _STATE_FATAL:
-                state = color(s['statename'], Fore.RED + Style.BRIGHT)
-            else:
-                state = color(s['statename'], Fore.RED)
+            state = format_state(s.get('statename'))
             print('\t{0}: {1}'.format(p, state))
             if full is True:
                 for k, v in s.items():
@@ -258,6 +270,8 @@ def main():
                         help='Start a process by number, the next process not started, or all of them')
     start_stop_grp.add_argument('-S', '--stop', dest='stop', nargs='+',
                         help='Stop a process by number, the next process not stopped, or all of them')
+    start_stop_grp.add_argument('--restart', dest='restart', nargs='+',
+                                help='Restart a process by number, the next process found running, or all')
 
     save_reload_grp.add_argument('--save', dest='save', type=str, const=SAVE_FILE, nargs='?',
                         help='Save the current state of each process group and number')
@@ -321,6 +335,20 @@ def main():
         if not worker_list(w.get_workers(args.list), args.list, args.full, args.running):
             sys.exit(_STAT_WARN)
         sys.exit(_STAT_OK)
+
+    if args.restart:
+        items       = args.restart
+        pgm_name    = items.pop(0)
+
+        if not items:
+            items.append('')
+
+        if handle_action('stop', pgm_name, items):
+            sleep(1)
+            if handle_action('start', pgm_name, items):
+                sys.exit(_STAT_OK)
+
+        sys.exit(_STAT_WARN)
 
     if args.start or args.stop:
         if args.start:
