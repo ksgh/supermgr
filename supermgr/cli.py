@@ -18,6 +18,7 @@ _STAT_WARN          = 1
 _STAT_CRIT          = 2
 _STAT_UNKNOWN       = 3
 
+_STATE_STARTING     = ('STARTING',)
 _STATE_RUNNING      = ('RUNNING',)
 _STATE_STOPPED      = ('STOPPED', 'EXITED', 'FATAL')
 _STATE_FATAL        = ('FATAL',)
@@ -51,6 +52,8 @@ def worker_list(workers, prgm=None, full=False, list_running=False):
                 state = color(s['statename'], Fore.GREEN)
             elif sn in _STATE_FATAL:
                 state = color(s['statename'], Fore.RED + Style.BRIGHT)
+            elif sn in _STATE_STARTING:
+                state = color(s['statename'], Fore.YELLOW)
             else:
                 state = color(s['statename'], Fore.RED)
             print('\t{0}: {1}'.format(p, state))
