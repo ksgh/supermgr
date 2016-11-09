@@ -54,6 +54,9 @@ Usage
           -S STOP [STOP ...], --stop STOP [STOP ...]
                                 Stop a process by number, the next process not
                                 stopped, or all of them (default: None)
+          --restart RESTART [RESTART ...]
+                                Restart a process by number, the next process found
+                                running, or all (default: None)
           --save [SAVE]         Save the current state of each process group and
                                 number (default: None)
           --reload [RELOAD]     Reload the state of each group and process from a
