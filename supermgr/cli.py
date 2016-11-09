@@ -271,7 +271,8 @@ def main():
     start_stop_grp.add_argument('-S', '--stop', dest='stop', nargs='+',
                         help='Stop a process by number, the next process not stopped, or all of them')
     start_stop_grp.add_argument('--restart', dest='restart', nargs='+',
-                                help='Restart a process by number, the next process found running, or all')
+                                help='Restart a process by number, the next process found running, or all. ' + \
+                                'WARNING: If the process specified is NOT running, this will attempt to start it')
 
     save_reload_grp.add_argument('--save', dest='save', type=str, const=SAVE_FILE, nargs='?',
                         help='Save the current state of each process group and number')
