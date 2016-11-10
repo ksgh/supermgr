@@ -19,17 +19,17 @@ _STAT_WARN          = 1
 _STAT_CRIT          = 2
 _STAT_UNKNOWN       = 3
 
+# http://supervisord.org/subprocess.html#process-states
 _STATE_TRANS        = ('STARTING', 'STOPPING', 'BACKOFF')
 _STATE_RUNNING      = ('RUNNING',)
 _STATE_STOPPED      = ('STOPPED', 'EXITED', 'FATAL')
 _STATE_FATAL        = ('FATAL',)
-_STATE_UNKNOWN      = ('UNKNOWN')
+_STATE_UNKNOWN      = ('UNKNOWN',)
 
 def color(val, color):
     return '{0}{1}{2}'.format(color, val, Style.RESET_ALL)
 
 def format_state(state_name):
-    # http://supervisord.org/subprocess.html#process-states
     if state_name in _STATE_RUNNING:
         state = color(state_name, Fore.GREEN)
     elif state_name in _STATE_FATAL:
@@ -43,7 +43,7 @@ def format_state(state_name):
 
     return state
 
-def worker_list(workers, prgm=None, full=False, list_running=False):
+def display_workers(workers, prgm=None, full=False):
     prgm_not_found = []
     if prgm:
         for p in prgm:
@@ -53,19 +53,9 @@ def worker_list(workers, prgm=None, full=False, list_running=False):
                     p=color(p, Fore.CYAN + Style.BRIGHT)))
 
     for name, status in workers.items():
-        _show = False
-        if list_running:
-            for p, s in status.items():
-                if s.get('statename').upper() in _STATE_RUNNING:
-                    _show = True
-        if not list_running or _show is True:
-            print(color(name, Fore.CYAN + Style.BRIGHT))
+        print(color(name, Fore.CYAN + Style.BRIGHT))
         for p, s in status.items():
-            if list_running:
-                if s.get('statename').upper() not in _STATE_RUNNING:
-                    continue
-            state = format_state(s.get('statename'))
-            print('\t{0}: {1}'.format(p, state))
+            print('\t{0}: {1}'.format(p, format_state(s.get('statename'))))
             if full is True:
                 for k, v in s.items():
                     if k not in ('group', 'name'):
@@ -88,12 +78,14 @@ def tail_log(worker, prgm, filetype=None):
     except IndexError:
         print('{e}: Unable to find a suitable log file'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
         return False
+
     try:
         for line in tailer.follow(open(logfile)):
             print(line)
     except KeyboardInterrupt:
         print()
-        return True
+
+    return True
 
 def monitor_workers(workers, target_state=_STATE_RUNNING[0]):
     errors = []
@@ -234,6 +226,9 @@ def handle_action(action, prgm, nums):
     return not found_error
 
 def main():
+
+    state_choices = [s.lower() for s in list(set(_STATE_RUNNING + _STATE_FATAL + _STATE_STOPPED + _STATE_TRANS + _STATE_UNKNOWN))]
+
     def usage():
         ex = (
             (color('Start the first "prgmName" not found to be running', Fore.WHITE + Style.BRIGHT),
@@ -244,10 +239,10 @@ def main():
                 'supermgr --start prgmName all'),
             (color('List all processes', Fore.WHITE + Style.BRIGHT),
                 'supermgr --list'),
-            (color('List only running processes', Fore.WHITE + Style.BRIGHT),
-                'supermgr --list --running'),
+            (color('List only fatal processes', Fore.WHITE + Style.BRIGHT),
+             'supermgr --list --state fatal'),
             (color('List full status for the running processes for "prgmName"', Fore.WHITE + Style.BRIGHT),
-                'supermgr --list prgmName --full --running'),
+                'supermgr --list prgmName --full --state running'),
             (color('Tail the stdout logfile for "prgmName"', Fore.WHITE + Style.BRIGHT),
                 'supermgr --tail prgmName'),
             (color('Tail the stderr logfile for "prgmName"', Fore.WHITE + Style.BRIGHT),
@@ -271,8 +266,8 @@ def main():
     start_stop_grp.add_argument('-S', '--stop', dest='stop', nargs='+',
                         help='Stop a process by number, the next process not stopped, or all of them')
     start_stop_grp.add_argument('--restart', dest='restart', nargs='+',
-                                help='Restart a process by number, the next process found running, or all. ' + \
-                                'WARNING: If the process specified is NOT running, this will attempt to start it')
+                        help='Restart a process by number, the next process found running, or all. ' + \
+                        'WARNING: If the process specified is NOT running, this will attempt to start it')
 
     save_reload_grp.add_argument('--save', dest='save', type=str, const=SAVE_FILE, nargs='?',
                         help='Save the current state of each process group and number')
@@ -282,22 +277,28 @@ def main():
     main_grp.add_argument('-l', '--list', dest='list', nargs='*',
                         help='List all groups and processes. Optionally show a specific group')
     main_grp.add_argument('--monitor-running', dest='monitor_running', action='store_true',
-                          help='Check for any processes not running')
+                        help='Check for any processes not running')
     main_grp.add_argument('-t', '--tail', dest='tail', nargs='+',
-                          help='Tail a process\'s logfile. If the type (err, out) is not provided this will default to stdout')
+                        help='Tail a process\'s logfile. If the type (err, out) is not provided this will default to stdout')
 
     list_grp.add_argument('-r', '--running', dest='running', action='store_true',
-                        help='Only show running processes')
+                        help='DEPRECATED: please use --state')
+    list_grp.add_argument('--state', dest='state', nargs=1, choices=state_choices,
+                        help='Only show processes in the specified state')
     list_grp.add_argument('-f', '--full', dest='full', action='store_true',
                         help='Show full status of processes')
 
     args        = parser.parse_args()
     connection  = supermgr.get_config()
 
+    if args.running:
+        print('{e}: --running is deprecated. use "--state running" instead'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
+        sys.exit(0)
+
     # It should (or I think it should) be possible to use a subparser for this, but I couldn't
     # quite get it to behave correctly.
-    if (args.full or args.running) and args.list is None:
-        print('{e}: --full, and --running only apply to -l, --list'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
+    if (args.full or args.state) and args.list is None:
+        print('{e}: --full, and --state only apply to -l, --list'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
         sys.exit(0)
 
     if args.tail:
@@ -333,7 +334,10 @@ def main():
 
     if args.list is not None:
         w = supermgr.Worker(connection)
-        if not worker_list(w.get_workers(args.list), args.list, args.full, args.running):
+        _filter_state = None
+        if args.state:
+            _filter_state = args.state[0].upper()
+        if not display_workers(w.get_workers(args.list, _filter_state), args.list, args.full):
             sys.exit(_STAT_WARN)
         sys.exit(_STAT_OK)
 

@@ -20,7 +20,7 @@ Usage
 
         Start the first "prgmName" not found to be running
         supermgr --start prgmName
-            
+
         Start process number 3 and 5 of "prgmName"
         supermgr --start prgmName 3 5
 
@@ -30,11 +30,11 @@ Usage
         List all processes
         supermgr --list
 
-        List only running processes
-        supermgr --list --running
+        List only fatal processes
+        supermgr --list --state fatal
 
         List full status for the running processes for "prgmName"
-        supermgr --list prgmName --full --running
+        supermgr --list prgmName --full --state running
 
         Tail the stdout logfile for "prgmName"
         supermgr --tail prgmName
@@ -74,7 +74,10 @@ Usage
                                 None)
 
         List Modifiers:
-          -r, --running         Only show running processes (default: False)
+          -r, --running         DEPRECATED: please use --state (default: False)
+          --state {unknown,backoff,running,stopped,stopping,fatal,starting,exited}
+                                Only show processes in the specified state (default:
+                                None)
           -f, --full            Show full status of processes (default: False)
 
 
