@@ -339,7 +339,11 @@ def main():
         w = supermgr.Worker(connection)
         if not monitor_workers(w.get_workers(), ignore=args.mon_ignore):
             sys.exit(_STAT_WARN)
-        print('Check complete!')
+
+        if args.mon_ignore:
+            print('Check complete, with exclusions!')
+        else:
+            print('Check complete!')
         sys.exit(_STAT_OK)
 
     if args.list is not None:
