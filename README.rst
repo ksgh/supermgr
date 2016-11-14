@@ -82,7 +82,7 @@ Usage
         Monitoring Options:
           --monitor-running     Check for any processes not running (default: False)
           --ignore MON_IGNORE [MON_IGNORE ...]
-                                Check for any processes not running (default: None)
+                                Exclude any process groups from the monitoring check (default: None)
 
 
 When starting or stopping processes, if nothing is provided as a process number the next process number in the group's

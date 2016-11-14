@@ -292,7 +292,7 @@ def main():
     monitor_grp.add_argument('--monitor-running', dest='monitor_running', action='store_true',
                         help='Check for any processes not running')
     monitor_grp.add_argument('--ignore', dest='mon_ignore', nargs='+',
-                        help='Check for any processes not running')
+                        help='Exclude any process groups from the monitoring check')
 
     args        = parser.parse_args()
     connection  = supermgr.get_config()
