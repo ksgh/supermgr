@@ -66,7 +66,6 @@ Usage
           -l [LIST [LIST ...]], --list [LIST [LIST ...]]
                                 List all groups and processes. Optionally show a
                                 specific group (default: None)
-          --monitor-running     Check for any processes not running (default: False)
 
           -t TAIL [TAIL ...], --tail TAIL [TAIL ...]
                                 Tail a process's logfile. If the type (err, out) is
@@ -79,6 +78,11 @@ Usage
                                 Only show processes in the specified state (default:
                                 None)
           -f, --full            Show full status of processes (default: False)
+
+        Monitoring Options:
+          --monitor-running     Check for any processes not running (default: False)
+          --ignore MON_IGNORE [MON_IGNORE ...]
+                                Check for any processes not running (default: None)
 
 
 When starting or stopping processes, if nothing is provided as a process number the next process number in the group's

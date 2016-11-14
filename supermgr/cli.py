@@ -87,9 +87,11 @@ def tail_log(worker, prgm, filetype=None):
 
     return True
 
-def monitor_workers(workers, target_state=_STATE_RUNNING[0]):
+def monitor_workers(workers, target_state=_STATE_RUNNING[0], ignore=None):
     errors = []
     for name, status in workers.items():
+        if ignore is not None and name in ignore:
+            continue
         is_ok = False
         for num, data in status.items():
             if data.get('statename').upper() == target_state.upper():
@@ -257,6 +259,7 @@ def main():
 
     main_grp        = parser.add_argument_group(color('Actions', Fore.YELLOW + Style.BRIGHT))
     list_grp        = parser.add_argument_group(color('List Modifiers', Fore.YELLOW + Style.BRIGHT))
+    monitor_grp     = parser.add_argument_group(color('Monitoring Options', Fore.YELLOW + Style.BRIGHT))
 
     start_stop_grp  = main_grp.add_mutually_exclusive_group()
     save_reload_grp = main_grp.add_mutually_exclusive_group()
@@ -276,8 +279,6 @@ def main():
 
     main_grp.add_argument('-l', '--list', dest='list', nargs='*',
                         help='List all groups and processes. Optionally show a specific group')
-    main_grp.add_argument('--monitor-running', dest='monitor_running', action='store_true',
-                        help='Check for any processes not running')
     main_grp.add_argument('-t', '--tail', dest='tail', nargs='+',
                         help='Tail a process\'s logfile. If the type (err, out) is not provided this will default to stdout')
 
@@ -288,12 +289,21 @@ def main():
     list_grp.add_argument('-f', '--full', dest='full', action='store_true',
                         help='Show full status of processes')
 
+    monitor_grp.add_argument('--monitor-running', dest='monitor_running', action='store_true',
+                        help='Check for any processes not running')
+    monitor_grp.add_argument('--ignore', dest='mon_ignore', nargs='+',
+                        help='Check for any processes not running')
+
     args        = parser.parse_args()
     connection  = supermgr.get_config()
 
     if args.running:
         print('{e}: --running is deprecated. use "--state running" instead'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
         sys.exit(0)
+
+    if args.mon_ignore and not args.monitor_running:
+        print('{e}: --ignore is only used with --monitor-running'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
+        sys.exit(1)
 
     # It should (or I think it should) be possible to use a subparser for this, but I couldn't
     # quite get it to behave correctly.
@@ -327,7 +337,7 @@ def main():
 
     if args.monitor_running:
         w = supermgr.Worker(connection)
-        if not monitor_workers(w.get_workers()):
+        if not monitor_workers(w.get_workers(), ignore=args.mon_ignore):
             sys.exit(_STAT_WARN)
         print('Check complete!')
         sys.exit(_STAT_OK)
