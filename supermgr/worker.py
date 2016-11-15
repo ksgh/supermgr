@@ -1,17 +1,56 @@
-#!/usr/bin/env python
-
 from .server import Server
 from collections import defaultdict, OrderedDict
+import datetime
 import xmlrpclib
 import sys
 
-class Worker(Server):
-    def __init__(self, connect_opts):
-        super(Worker, self).__init__(connect_opts)
-        self.workers = None
+'''
+{
+"activity": {
+    "0": {
+        "now": 1478724612,
+        "group": "activity",
+        "description": "pid 27522, uptime 3:52:14",
+        "pid": 27522,
+        "stderr_logfile": "/var/log/jazz/workers/activity.err.log",
+        "stop": 1478526313,
+        "statename": "RUNNING",
+        "start": 1478710678,
+        "state": 20,
+        "stdout_logfile": "/var/log/jazz/workers/activity.out.log",
+        "logfile": "/var/log/jazz/workers/activity.out.log",
+        "exitstatus": 0,
+        "spawnerr": "",
+        "name": "0"
+    },
+    "1": {
+        "now": 1478724612,
+        ...
+    }
+}
+'''
 
-        if not isinstance(self.server, xmlrpclib.Server):
-            sys.exit(2)
+
+class Worker():
+    def __init__(self, connect_opts):
+        self.now            = None
+        self.name           = None
+        self.group          = None
+        self.description    = None
+        self.pid            = None
+        self.start          = None
+        self.stop           = None
+        self.state          = None
+        self.statename      = None
+        self.stderr         = None
+        self.stdout_logfile = None
+        self.stderr_logfile = None
+        self.logfile        = None
+        self.exitstatus     = None
+        self.spawnerr       = None
+
+
+    def start(self):
 
     def __filter_workers(self, worker, filter=None):
         if filter is not None:
