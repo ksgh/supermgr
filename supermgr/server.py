@@ -1,20 +1,25 @@
 from __future__ import print_function
 from socket import error as socket_error
+
+from .config import get_config
 import errno
 import xmlrpclib
 import sys
 
-class Server(object):
-    def __init__(self, connect_opts):
+class Server():
+
+    def __init__(self):
+        connect_opts = get_config()
         self.host   = connect_opts.get('host')
         self.port   = connect_opts.get('port')
         self.server = None
-        self.__connect()
 
     def get_server(self):
-        return self.server
+        if self.server:
+            return self.server
+        return self.connect()
 
-    def __connect(self):
+    def connect(self):
         url = 'http://{host}:{port}/RPC2'.format(host=self.host, port=self.port)
         try:
             self.server = xmlrpclib.Server(url)
@@ -29,3 +34,4 @@ class Server(object):
             else:
                 print('Unable to connect to {url}, check your connection settings.'.format(url=url), file=sys.stderr)
 
+        return self.server

@@ -1,49 +1,53 @@
-#!/usr/bin/env python
-
 from .server import Server
-from collections import defaultdict, OrderedDict
 import xmlrpclib
-import sys
 
-class Worker(Server):
-    def __init__(self, connect_opts):
-        super(Worker, self).__init__(connect_opts)
-        self.workers = None
+class Worker():
+    now = None
+    name = None
+    group = None
+    description = None
+    pid = None
+    start = None
+    stop = None
+    state = None
+    statename = None
+    stderr = None
+    stdout_logfile = None
+    stderr_logfile = None
+    logfile = None
+    exitstatus = None
+    spawnerr = None
 
-        if not isinstance(self.server, xmlrpclib.Server):
-            sys.exit(2)
+    def __init__(self, worker):
+        if not isinstance(worker, dict):
+            return
+        for k, v in worker.items():
+            setattr(self, k, v)
 
-    def __filter_workers(self, worker, filter=None):
-        if filter is not None:
-            if worker.get('statename') == filter:
-                return {worker.get('name'): worker}
-        else:
-            return {worker.get('name'): worker}
+    def __repr__(self):
+        return '<Worker: {group}:{name}>'.format(group=self.group, name=self.name)
 
-        return None
+    def as_dict(self):
+        return self.__dict__
 
-    def get_workers(self, group_names=None, filter_state=None):
-        data    = self.server.supervisor.getAllProcessInfo()
-        workers = defaultdict(dict)
+    def w_start(self):
+        serv = Server().get_server()
+        try:
+            return serv.supervisor.startProcess('{g}:{n}'.format(g=self.group, n=self.name))
+        except xmlrpclib.Fault as e:
+            pass
 
-        if group_names is not None and not isinstance(group_names, list):
-            group_names = [group_names]
+        return False
 
-        for info in data:
-            if group_names:
-                if info.get('group') in group_names:
-                    _data = self.__filter_workers(info, filter_state)
-                    if _data:
-                        workers[info.get('group')].update(_data)
-            else:
-                _data = self.__filter_workers(info, filter_state)
-                if _data:
-                    workers[info.get('group')].update(_data)
+    def w_stop(self):
+        serv = Server().get_server()
+        try:
+            return serv.supervisor.stopProcess('{g}:{n}'.format(g=self.group, n=self.name))
+        except xmlrpclib.Fault as e:
+            pass
 
-        for n, d in workers.items():
-            workers[n] = OrderedDict(sorted(d.items(), key=lambda k: k[0]))
+        return False
 
-        self.workers = OrderedDict(sorted(workers.items(), key=lambda k: k[0]))
 
-        return self.workers
+
 
