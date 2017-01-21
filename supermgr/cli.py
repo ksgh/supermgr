@@ -11,6 +11,7 @@ import os
 import argparse
 import tailer
 import pickle
+import fnmatch
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -48,10 +49,11 @@ def display_workers(workers, prgm=None, full=False):
     prgm_not_found = []
     if prgm:
         for p in prgm:
-            if p not in workers:
-                prgm_not_found.append('{e}: no workers found for {p}'.format(
-                    e=color('ERROR', Fore.RED + Style.BRIGHT),
-                    p=color(p, Fore.CYAN + Style.BRIGHT)))
+            for w in workers:
+                if not fnmatch.fnmatch(w, p):
+                    prgm_not_found.append('{e}: no workers found for {p}'.format(
+                        e=color('ERROR', Fore.RED + Style.BRIGHT),
+                        p=color(p, Fore.CYAN + Style.BRIGHT)))
 
     for name, worker in workers.items():
         print(color(name, Fore.CYAN + Style.BRIGHT))

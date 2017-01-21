@@ -1,3 +1,4 @@
-dist
-supermgr.egg-info
+build/
+dist/
+*.egg-info/
 .idea

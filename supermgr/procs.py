@@ -1,4 +1,5 @@
 from collections import defaultdict, OrderedDict
+import fnmatch
 
 from .server import Server
 from .worker import Worker
@@ -22,10 +23,11 @@ def get_workers(group_names=None, filter_state=None):
     for info in data:
         w = Worker(info)
         if group_names:
-            if w.group in group_names:
-                _data = __filter_workers(w, filter_state)
-                if _data:
-                    workers[w.group].update(_data)
+            for group in group_names:
+                if fnmatch.fnmatch(w.group, group):
+                    _data = __filter_workers(w, filter_state)
+                    if _data:
+                        workers[w.group].update(_data)
         else:
             _data = __filter_workers(w, filter_state)
             if _data:
