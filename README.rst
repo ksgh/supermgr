@@ -33,6 +33,9 @@ Usage
         List only fatal processes
         supermgr --list --state fatal
 
+        List any process that match
+        supermgr --list prgm*
+
         List full status for the running processes for "prgmName"
         supermgr --list prgmName --full --state running
 
