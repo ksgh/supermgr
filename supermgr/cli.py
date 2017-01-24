@@ -47,13 +47,23 @@ def format_state(state_name):
 
 def display_workers(workers, prgm=None, full=False):
     prgm_not_found = []
-    if prgm:
+    _prgms_track = []
+    if not workers:
+        for p in prgm:
+            _prgms_track.append(p)
+            prgm_not_found.append('{e}: no workers found for {p}'.format(
+                e=color('ERROR', Fore.RED + Style.BRIGHT),
+                p=color(p, Fore.CYAN + Style.BRIGHT)))
+
+    if prgm and workers:
         for p in prgm:
             for w in workers:
                 if not fnmatch.fnmatch(w, p):
-                    prgm_not_found.append('{e}: no workers found for {p}'.format(
-                        e=color('ERROR', Fore.RED + Style.BRIGHT),
-                        p=color(p, Fore.CYAN + Style.BRIGHT)))
+                    if p not in _prgms_track:
+                        _prgms_track.append(p)
+                        prgm_not_found.append('{e}: no workers found for {p}'.format(
+                            e=color('ERROR', Fore.RED + Style.BRIGHT),
+                            p=color(p, Fore.CYAN + Style.BRIGHT)))
 
     for name, worker in workers.items():
         print(color(name, Fore.CYAN + Style.BRIGHT))
