@@ -28,7 +28,11 @@ _STATE_STOPPED      = ('STOPPED', 'EXITED', 'FATAL')
 _STATE_FATAL        = ('FATAL',)
 _STATE_UNKNOWN      = ('UNKNOWN',)
 
+COLOR = True
+
 def color(val, color):
+    if not COLOR:
+        return val
     return '{0}{1}{2}'.format(color, val, Style.RESET_ALL)
 
 def format_state(state_name):
@@ -247,7 +251,7 @@ def handle_action(action, prgm, nums):
     return action_status(a_threads)
 
 def main():
-
+    global COLOR
     state_choices = [s.lower() for s in list(set(_STATE_RUNNING + _STATE_FATAL + _STATE_STOPPED + _STATE_TRANS + _STATE_UNKNOWN))]
 
     def usage():
@@ -300,6 +304,8 @@ def main():
                         help='List all groups and processes. Optionally show a specific group')
     main_grp.add_argument('-t', '--tail', dest='tail', nargs='+',
                         help='Tail a process\'s logfile. If the type (err, out) is not provided this will default to stdout')
+    main_grp.add_argument('--no-color', dest='no_color', action='store_true',
+                        help='Do not output color')
 
     list_grp.add_argument('-r', '--running', dest='running', action='store_true',
                         help='DEPRECATED: please use --state')
@@ -314,6 +320,9 @@ def main():
                         help='Exclude any process groups from the monitoring check')
 
     args        = parser.parse_args()
+
+    if args.no_color:
+        COLOR = False
 
     if args.running:
         print('{e}: --running is deprecated. use "--state running" instead'.format(e=color('ERROR', Fore.RED + Style.BRIGHT)))
