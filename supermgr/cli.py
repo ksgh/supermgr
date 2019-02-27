@@ -3,6 +3,7 @@ from colorama import init, Fore, Style
 from datetime import datetime
 from time import sleep
 from .action import Action
+from .worker import Worker
 from .procs import get_workers
 import threading
 import pprint
@@ -12,6 +13,7 @@ import argparse
 import tailer
 import pickle
 import fnmatch
+import yaml
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -152,6 +154,31 @@ def action_status(threads):
 
     return not found_error
 
+def load_states(filename):
+    tl = threading.Lock()
+
+    try:
+        with open(filename, 'r') as f:
+            states = yaml.safe_load(f)
+    except IOError as e:
+        print(color(e, Fore.RED + Style.BRIGHT))
+        return False
+
+    threads = []
+
+    for group, proc in states.items():
+        for num, state in proc.items():
+            if state.lower() == 'running':
+                w = Worker({'group': group, 'name': num})
+                a = Action('start', w, tl)
+                a.start()
+                threads.append(a)
+
+    if threads:
+        return action_status(threads)
+
+    return False
+
 def reload_state(filename):
     print(color('Attempting to return workers to a previously saved state', Fore.YELLOW + Style.BRIGHT))
     try:
@@ -250,6 +277,10 @@ def handle_action(action, prgm, nums):
 
     return action_status(a_threads)
 
+def get_version():
+    from _version import __version__
+    return 'supermgr: {}'.format(__version__)
+
 def main():
     global COLOR
     state_choices = [s.lower() for s in list(set(_STATE_RUNNING + _STATE_FATAL + _STATE_STOPPED + _STATE_TRANS + _STATE_UNKNOWN))]
@@ -298,8 +329,10 @@ def main():
     save_reload_grp.add_argument('--save', dest='save', type=str, const=SAVE_FILE, nargs='?',
                         help='Save the current state of each process group and number')
     save_reload_grp.add_argument('--reload', dest='reload', type=str, const=SAVE_FILE, nargs='?',
-                        help='Reload the state of each group and process from a saved status')
+                        help='Reload the state of each group and process from a saved status - Or provide your own yaml file')
 
+    main_grp.add_argument('-v', '--version', dest='version', action='store_true',
+                          help='Show version and exit')
     main_grp.add_argument('-l', '--list', dest='list', nargs='*',
                         help='List all groups and processes. Optionally show a specific group')
     main_grp.add_argument('-t', '--tail', dest='tail', nargs='+',
@@ -320,6 +353,10 @@ def main():
                         help='Exclude any process groups from the monitoring check')
 
     args        = parser.parse_args()
+
+    if args.version:
+        print(get_version())
+        sys.exit(0)
 
     if args.no_color:
         COLOR = False
@@ -356,6 +393,13 @@ def main():
         sys.exit(_STAT_OK)
 
     if args.reload:
+        # This is now an override of the default
+        if args.reload.endswith('.yml') or args.reload.endswith('.yaml'):
+            state_file = args.reload
+            if not load_states(state_file):
+                sys.exit(_STAT_WARN)
+            sys.exit(_STAT_OK)
+
         if not reload_state(args.reload):
             sys.exit(_STAT_WARN)
         sys.exit(_STAT_OK)
@@ -374,6 +418,7 @@ def main():
         _filter_state = None
         if args.state:
             _filter_state = args.state[0].upper()
+            
         if not display_workers(get_workers(args.list, _filter_state), args.list, args.full):
             sys.exit(_STAT_WARN)
         sys.exit(_STAT_OK)
