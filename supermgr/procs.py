@@ -21,7 +21,6 @@ def get_workers(group_names=None, filter_state=None):
         group_names = [group_names]
 
     for info in data:
-        print(info)
         w = Worker(info)
         if group_names:
             for group in group_names:
