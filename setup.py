@@ -4,9 +4,14 @@ def readme():
     with open('README.rst') as f:
         return f.read()
 
+def get_version():
+    version_file = 'supermgr/_version.py'
+    exec (open(version_file).read())
+    return __version__
+
 setup(
     name='supermgr',
-    version='0.15',
+    version=get_version(),
     description='Easier Management of individual supervisord processes',
     long_description=readme(),
     url='https://github.com/ksgh/supermgr',
