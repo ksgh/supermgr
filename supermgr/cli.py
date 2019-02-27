@@ -418,8 +418,7 @@ def main():
         _filter_state = None
         if args.state:
             _filter_state = args.state[0].upper()
-            pp.pprint(get_workers(args.list, _filter_state))
-            sys.exit(0)
+            
         if not display_workers(get_workers(args.list, _filter_state), args.list, args.full):
             sys.exit(_STAT_WARN)
         sys.exit(_STAT_OK)
