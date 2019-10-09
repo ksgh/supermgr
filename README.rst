@@ -94,8 +94,3 @@ sequence not found in the desired state will be acted upon.
 Contributing
 ------------
 Suggestions and contributions are welcome. Please fork me and create PRs back to the ``develop`` branch.
-
-Disclaimer
-----------
-I'm new to creating python packages. This seemed like a good place to start learning, being a relatively small
-project to bite off.
