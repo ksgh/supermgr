@@ -5,9 +5,9 @@ def readme():
         return f.read()
 
 def get_version():
-    version_file = 'supermgr/_version.py'
-    exec (open(version_file).read())
-    return __version__
+    #version_file = 'supermgr/_version.py'
+    #exec (open(version_file).read())
+    return '0.16'
 
 setup(
     name='supermgr',
