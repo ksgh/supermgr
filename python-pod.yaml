@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: py-supermgr-build
+    image: python:3.9.16
+    command: ["tail", "-f", "/dev/null"]
