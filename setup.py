@@ -22,7 +22,8 @@ setup(
     install_requires=[
         'colorama',
         'argparse',
-        'tailer'
+        'tailer',
+        'pylint'
     ],
     zip_safe=False,
 
